@@ -1,17 +1,25 @@
-import socket
-import sys
-import time, datetime
+import subprocess, socket, sys, time, datetime
 
 class Host(object):
     ip: str = ""
     fqdn: str = ""
     open_ports: list[tuple[int, str, str, str]] = [] # (port, protocol, state, service)
     scan_time: float = 0.0
+    up: bool = True
 
     def __init__(self, _ip: str):
         self.ip = _ip
 
-    def tcp_scan(self, min_port: int, max_port: int, verbose: bool): # scan range of ports
+    def ping(self):
+        try:
+            subprocess.check_output(["ping", "-c", "1", str(self.ip)])
+        except subprocess.CalledProcessError:
+            self.up = False
+            print("stuff")
+
+        return self.up
+
+    def tcp_scan(self, min_port: int, max_port: int, verbose: bool): # scan range of ports, multithread this
         open_ports: list[tuple[int, str, str, str]] = []
         try:
             for port in range(min_port, max_port + 1):
@@ -36,7 +44,8 @@ class Host(object):
         finally:
             return open_ports
 
-    def scan_ports(self, min_port: int, max_port: int, verbose: bool): # scan range of ports
+    def scan_ports(self, min_port: int, max_port: int, verbose: bool): # scan range of ports, seems to be very inefficient
+        socket.setdefaulttimeout(0.2)
         self.fqdn = socket.getfqdn(self.ip)
 
         if verbose:
@@ -55,14 +64,20 @@ class Host(object):
 
         self.open_ports = open_ports
 
+        return open_ports
+
 
     def scan_report(self):
         print(f"Scan report for {self.fqdn} ({self.ip})")
 
-        print("PORT    STATE SERVICE")
-        for port in self.open_ports:
-            port_and_proto = f"{port[0]}/{port[1]}"
-            state = port[2]
-            serv = port[3]
+        if self.up:
+            print("PORT    STATE SERVICE")
+            for port in self.open_ports:
+                port_and_proto = f"{port[0]}/{port[1]}"
+                state = port[2]
+                serv = port[3]
 
-            print(f'{port_and_proto:<7} {state:<5} {serv:<8}')
+                print(f'{port_and_proto:<7} {state:<5} {serv:<8}')
+
+        else:
+            print("Host seems to be down. If it is really up, but blocking ping probes, try -Pn")

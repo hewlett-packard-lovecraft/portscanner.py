@@ -1,15 +1,16 @@
-# pyportscanner
+# portscanner.py
 
 ## About
-A simple Python port scanner. Scans specified ports on single or multiple hosts. Run with the `-h` flag for instructions
+A simple Python port scanner. Scans specified ports on single or multiple hosts using an FQDN or IP address or an individual network. Run with `--help` for instructions
 
 ## Features
 - Service detection
-- TCP scanning
-- Network scanning
+- TCP scan
+- Ping scan
+- Network scan
 
-## To be added
-- Reading targets from file
+## stuff to add in the future
 - Multithreading
-- UDP scanning
-- Traceroute
+- UDP scan
+- Reading targets from file
+- a manpage
